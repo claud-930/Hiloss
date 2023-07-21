@@ -1,78 +1,46 @@
 import time
 import threading
 
-from PySide6 import QtGui
+from PySide6 import QtGui, QtCore
+
+from Drawables.game_object import DrawableGameObject
 
 
-class Ball:
-    def __init__(self, x, y, ux, uy, size, color, canvas, bg_color):
+class Ball(DrawableGameObject):
+    def __init__(self, x, y, ux, uy, thickness, color, canvas, bg_color):
         """
         Creates a ball object.
         :param x: Starting x coordinate
         :param y: Starting y coordinate
         :param ux: Unitary vector in the x direction
         :param uy: Unitary vector in the y direction
-        :param size: Size of the ball
+        :param thickness: thickness of the ball
         :param color: Color of the ball
         :param canvas: Canvas to draw the ball on
         :param bg_color: Background color of the canvas
         """
-        self.x = x
-        self.y = y
+        super().__init__(x, y, thickness, color, bg_color, canvas)
         self.ux = ux
         self.uy = uy
-        self.size = size
-        self.color = QtGui.QColor(color)
-        self.canvas = canvas
-        self.bg_color = bg_color
-        # Internal variables
         self.impact_x = None
         self.impact_y = None
-        self.last_drawn_x = None
-        self.last_drawn_y = None
-        self.speed = 150
-        self.moving = False
+        self.speed = 500
         self.tick_rate = 0.016
-        self.tread = threading.Thread(target=self.runner)
+        self.thread = threading.Thread(target=self.runner)
+        self.runner_signal = False
 
-    def draw(self):
-        """
-        Draws the ball on the canvas.
-        :return:
-        """
+    def runner(self):
+        initial_impact_point = self.impact_point(self.ux, self.uy)
+        self.impact_x = initial_impact_point[0]
+        self.impact_y = initial_impact_point[1]
+        while self.runner_signal:
+            self.move(self.impact_x, self.impact_y)
+            self.bounce()
+
+    def paint(self, color: QtGui.QColor, x, y):
         painter = QtGui.QPainter(self.canvas)
-        pen = QtGui.QPen()
-        pen.setWidth(self.size)
-        pen.setColor(self.color)
-        painter.setPen(pen)
-        painter.drawPoint(self.x, self.y)
-        painter.end()
-        self.last_drawn_x = self.x
-        self.last_drawn_y = self.y
-
-    def erase(self):
-        """
-        Erases the ball from the canvas.
-        :return:
-        """
-        painter = QtGui.QPainter(self.canvas)
-        pen = QtGui.QPen()
-        pen.setWidth(self.size + 1)
-        pen.setColor(self.bg_color)
-        painter.setPen(pen)
-        painter.drawPoint(self.last_drawn_x, self.last_drawn_y)
-        painter.end()
-
-    def update(self):
-        """
-        Updates the ball's position on the canvas.
-        :return:
-        """
-        if self.last_drawn_x is None and self.last_drawn_y is None:
-            self.draw()
-        else:
-            self.erase()
-            self.draw()
+        rect = QtCore.QRect(x, y, self.thickness, self.thickness)
+        painter.fillRect(rect, color)
 
     def move(self, x, y):
         """
@@ -81,7 +49,6 @@ class Ball:
         :param y: Coordinate y
         :return:
         """
-        self.moving = True
         unitary_vector = self.unitary_vector(x, y)
         distance = self.distance_to_point(x, y)
         speed = self.speed * self.tick_rate
@@ -95,7 +62,11 @@ class Ball:
                 self.y += unitary_vector[1] * speed
                 distance = self.distance_to_point(x, y)
             time.sleep(self.tick_rate)
-        self.moving = False
+
+    def bounce(self):
+        self.ux = -self.ux
+        self.uy = -self.uy
+        self.impact_point(self.ux, self.uy)
 
     def distance_to_point(self, x, y):
         """
