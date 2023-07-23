@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
             layout.addWidget(widget)
         central_widget.setLayout(layout)
 
-        self.game.flag = True
+        self.game.canvas_thread_runner_signal = True
         self.game.canvas_thread.start()
 
     def keyPressEvent(self, event: QKeyEvent):

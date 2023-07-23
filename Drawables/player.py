@@ -4,6 +4,9 @@ import threading
 from PySide6 import QtGui, QtCore
 
 from Drawables.game_object import DrawableGameObject
+from Drawables.ball import Ball
+
+from Constants import Dimensions
 
 
 class Player(DrawableGameObject):
@@ -13,8 +16,8 @@ class Player(DrawableGameObject):
                  tick_rate=0.016):
         """
         Creates a player object.
-        :param x: Initial x coordinate
-        :param y: Initial y coordinate
+        :param x: Initial __x coordinate
+        :param y: Initial __y coordinate
         :param size: Size of the player bar
         :param thickness: Thickness of the player bar
         :param canvas: Canvas to draw the player bar on
@@ -39,6 +42,8 @@ class Player(DrawableGameObject):
         # Thread
         self.thread = threading.Thread(target=self.runner)
         self.runner_signal = False
+        self.sticky = False
+        self.ball = None
 
     def runner(self):
         while self.runner_signal:
@@ -46,6 +51,9 @@ class Player(DrawableGameObject):
                 self.move_up()
             elif self.keys[self.key_down]:
                 self.move_down()
+            elif self.keys[self.key_special]:
+                if self.ball is not None:
+                    self.launch_ball()
             self.update()
             time.sleep(self.tick_rate)
 
@@ -57,15 +65,23 @@ class Player(DrawableGameObject):
     def move_up(self):
         if self.y <= 0:
             self.y = 0
+            if self.sticky:
+                self.ball.y = Dimensions.center_ball_on_player_y
         else:
             self.y -= self.speed
+            if self.sticky:
+                self.ball.y -= self.speed
 
     def move_down(self):
         max_y = self.canvas.height() - self.size
         if self.y >= max_y:
             self.y = max_y
+            if self.sticky:
+                self.ball.y = max_y + Dimensions.center_ball_on_player_y
         else:
             self.y += self.speed
+            if self.sticky:
+                self.ball.y += self.speed
 
     def keyboard_event(self, event: QtGui.QKeyEvent):
         if event.isAutoRepeat():
@@ -73,3 +89,12 @@ class Player(DrawableGameObject):
         if event.key() in self.keys:
             self.keys[event.key()] = not self.keys[event.key()]
 
+    def ball_sticky(self, ball: Ball):
+        self.ball = ball
+        self.sticky = True
+
+    def launch_ball(self):
+        self.ball.runner_signal = True
+        self.ball.thread.start()
+        self.ball = None
+        self.sticky = False
