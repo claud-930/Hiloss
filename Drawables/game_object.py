@@ -38,9 +38,9 @@ class DrawableGameObject:
         pass
 
     def draw(self):
-        self.paint(self.object_color, self.__x, self.__y)
-        self.__last_drawn_x = self.__x
-        self.__last_drawn_y = self.__y
+        self.paint(self.object_color, self.x, self.y)
+        self.__last_drawn_x = self.x
+        self.__last_drawn_y = self.y
 
     def erase(self):
         self.paint(self.bg_color, self.__last_drawn_x, self.__last_drawn_y)
@@ -48,6 +48,8 @@ class DrawableGameObject:
     def update(self):
         if self.__last_drawn_x is None and self.__last_drawn_y is None:
             self.draw()
+        elif self.x == self.__last_drawn_x and self.y == self.__last_drawn_y:
+            return
         else:
             self.erase()
             self.draw()

@@ -91,6 +91,7 @@ class Ball(DrawableGameObject):
                 self.x += self.ux * speed
                 self.y += self.uy * speed
                 distance = self.distance_to_point(x, y)
+            self.update()
             time.sleep(self.tick_rate)
 
     def bounce(self):

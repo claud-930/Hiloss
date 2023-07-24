@@ -12,13 +12,10 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         self.game = Game()
-        self.test_button = QPushButton("move_ball")
-        self.test_button.clicked.connect(self.game.test_move_ball)
 
         # Widgets to be added to the layout
         layout_widgets = [
-            self.game,
-            self.test_button
+            self.game
         ]
         # Add widgets to the layout and set the layout to the central widget
         layout = QVBoxLayout()

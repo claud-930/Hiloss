@@ -6,7 +6,7 @@ from PySide6 import QtGui, QtCore
 from Drawables.game_object import DrawableGameObject
 from Drawables.ball import Ball
 
-from Constants import Dimensions
+from Constants import Dimensions, Colors
 
 
 class Player(DrawableGameObject):
@@ -44,6 +44,7 @@ class Player(DrawableGameObject):
         self.runner_signal = False
         self.sticky = False
         self.ball = None
+        self.score = 0
 
     def runner(self):
         while self.runner_signal:
@@ -55,6 +56,8 @@ class Player(DrawableGameObject):
                 if self.ball is not None:
                     self.launch_ball()
             self.update()
+            if self.sticky:
+                self.ball.update()
             time.sleep(self.tick_rate)
 
     def paint(self, color: QtGui.QColor, x, y):
@@ -98,3 +101,30 @@ class Player(DrawableGameObject):
         self.ball.thread.start()
         self.ball = None
         self.sticky = False
+
+    def reset(self):
+        self.y = Dimensions.center_player_y
+        self.sticky = False
+        self.ball = None
+        self.__last_drawn_x = None
+        self.__last_drawn_y = None
+
+    def spawn_ball(self):
+        y_ball = Dimensions.center_player_y + \
+                 Dimensions.center_ball_on_player_y
+        if self.x == 0:
+            x_ball = Dimensions.player['thickness']
+            ux = 1
+        else:
+            x_ball = Dimensions.canvas['width'] - \
+                     Dimensions.player['thickness'] - Dimensions.ball
+            ux = -1
+
+        self.ball = Ball(
+            x_ball, y_ball,
+            ux, 0,
+            Dimensions.ball,
+            Colors.neutral, self.canvas, Colors.canvas
+        )
+        self.sticky = True
+        self.ball.update()

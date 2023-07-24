@@ -43,27 +43,42 @@ class Game(QtWidgets.QLabel):
             Colors.canvas,
             KeyBinds.player2
         )
-        self.instantiate_players()
-        initial_ball_x = self.player1.x + self.player1.thickness
-        initial_ball_y = self.player1.y + Dimensions.center_ball_on_player_y
-        self.ball = Ball(initial_ball_x, initial_ball_y, 1, 0, 20,
-                         Colors.neutral, self.canvas, Colors.canvas)
-        self.player1.ball_sticky(self.ball)
+        self.ball: Ball = None
+        self.ball_owner = self.player1
+        self.start_player_threads()
 
-    def instantiate_players(self):
+    def score(self):
+        self.stop_objects_threads()
+
+        self.ball_owner.score += 1
+        if self.ball_owner == self.player1:
+            self.ball_owner = self.player2
+        else:
+            self.ball_owner = self.player1
+
+        self.reset()
+
+    def reset(self):
+        self.canvas.fill(Colors.canvas)
+        self.setPixmap(self.canvas)
+        self.player1.reset()
+        self.player2.reset()
+
+    def stop_objects_threads(self):
+        self.ball.runner_signal = False
+        self.player1.runner_signal = False
+        self.player2.runner_signal = False
+
+    def start_player_threads(self):
         self.player1.runner_signal = True
         self.player2.runner_signal = True
         self.player1.thread.start()
         self.player2.thread.start()
-
-    def test_move_ball(self):
-        self.ball.runner_signal = True
-        thread = self.ball.thread
-        thread.start()
+        self.ball_owner.spawn_ball()
+        self.ball = self.ball_owner.ball
 
     def canvas_update(self):
         while self.canvas_thread_runner_signal:
-            self.ball.update()
             self.setPixmap(self.canvas)
             time.sleep(self.tick_rate)
 
