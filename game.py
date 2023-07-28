@@ -19,8 +19,8 @@ class Game(QtWidgets.QLabel):
         self.setPixmap(self.canvas)
         self.tick_rate = 0.016
 
-        self.canvas_thread = threading.Thread(target=self.canvas_update)
-        self.canvas_thread_runner_signal = False
+        self.thread = threading.Thread(target=self.runner)
+        self.runner_signal = False
 
         self.player1 = Player(
             0,
@@ -43,44 +43,68 @@ class Game(QtWidgets.QLabel):
             Colors.canvas,
             KeyBinds.player2
         )
+        self.players = [self.player1, self.player2]
         self.ball: Ball = None
         self.ball_owner = self.player1
+        self.ball_receiver = self.player2
         self.start_player_threads()
 
+    def runner(self):
+        while self.runner_signal:
+            if self.ball.critical_zone['flag'] is True:
+                ball_receiver_surface = [
+                    self.ball_receiver.y,
+                    self.ball_receiver.y + self.ball_receiver.size
+                ]
+                if ball_receiver_surface[0] <= self.ball.y <= \
+                        ball_receiver_surface[1]:
+                    self.switch_ball_owner()
+                    self.ball.critical_zone['flag'] = False
+                    self.ball.bounce()
+                else:
+                    self.score()
+            self.setPixmap(self.canvas)
+            time.sleep(self.tick_rate)
+
     def score(self):
-        self.stop_objects_threads()
+        self.send_stop_signals()
 
         self.ball_owner.score += 1
+        print(f"Player 1: {self.player1.score} - "
+              f"Player 2: {self.player2.score}")
+
         if self.ball_owner == self.player1:
             self.ball_owner = self.player2
+            self.ball_receiver = self.player1
         else:
             self.ball_owner = self.player1
+            self.ball_receiver = self.player2
 
         self.reset()
 
     def reset(self):
+        self.ball.thread.join()
         self.canvas.fill(Colors.canvas)
-        self.setPixmap(self.canvas)
-        self.player1.reset()
-        self.player2.reset()
+        for player in self.players:
+            player.reset()
+        self.start_player_threads()
 
-    def stop_objects_threads(self):
+    def send_stop_signals(self):
         self.ball.runner_signal = False
-        self.player1.runner_signal = False
-        self.player2.runner_signal = False
+        for player in self.players:
+            player.runner_signal = False
 
     def start_player_threads(self):
-        self.player1.runner_signal = True
-        self.player2.runner_signal = True
-        self.player1.thread.start()
-        self.player2.thread.start()
+        for player in self.players:
+            player.runner_signal = True
+            player.thread.start()
+
         self.ball_owner.spawn_ball()
         self.ball = self.ball_owner.ball
 
     def canvas_update(self):
-        while self.canvas_thread_runner_signal:
-            self.setPixmap(self.canvas)
-            time.sleep(self.tick_rate)
+        self.setPixmap(self.canvas)
+        time.sleep(self.tick_rate)
 
     def keyboard_event(self, event: QtGui.QKeyEvent):
         if event.key() in self.player1.keys.keys():
@@ -89,3 +113,17 @@ class Game(QtWidgets.QLabel):
             self.player2.keyboard_event(event)
         else:
             return
+
+    def switch_ball_owner(self):
+        if self.ball_owner == self.player1:
+            self.ball_owner = self.player2
+            self.ball_receiver = self.player1
+            critical_zone = Dimensions.ball_critical_pos['player1']
+
+        else:
+            self.ball_owner = self.player1
+            self.ball_receiver = self.player2
+            critical_zone = Dimensions.ball_critical_pos['player2']
+
+        self.ball.critical_zone['x1'] = critical_zone[0]
+        self.ball.critical_zone['x2'] = critical_zone[1]

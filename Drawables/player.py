@@ -103,15 +103,21 @@ class Player(DrawableGameObject):
         self.sticky = False
 
     def reset(self):
+        # End thread and start a new one
+        self.thread.join()
+        self.thread = threading.Thread(target=self.runner)
+        # Reset player attributes
         self.y = Dimensions.center_player_y
         self.sticky = False
         self.ball = None
         self.__last_drawn_x = None
         self.__last_drawn_y = None
+        self.draw()
 
     def spawn_ball(self):
         y_ball = Dimensions.center_player_y + \
                  Dimensions.center_ball_on_player_y
+
         if self.x == 0:
             x_ball = Dimensions.player['thickness']
             ux = 1
@@ -126,5 +132,9 @@ class Player(DrawableGameObject):
             Dimensions.ball,
             Colors.neutral, self.canvas, Colors.canvas
         )
+        ball_receiver = 'player2' if self.x == 0 else 'player1'
+        critical_pos = Dimensions.ball_critical_pos[ball_receiver]
+        self.ball.critical_zone['x1'] = critical_pos[0]
+        self.ball.critical_zone['x2'] = critical_pos[1]
         self.sticky = True
         self.ball.update()

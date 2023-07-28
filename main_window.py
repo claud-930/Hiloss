@@ -23,8 +23,8 @@ class MainWindow(QMainWindow):
             layout.addWidget(widget)
         central_widget.setLayout(layout)
 
-        self.game.canvas_thread_runner_signal = True
-        self.game.canvas_thread.start()
+        self.game.runner_signal = True
+        self.game.thread.start()
 
     def keyPressEvent(self, event: QKeyEvent):
         self.game.keyboard_event(event)

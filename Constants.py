@@ -33,3 +33,13 @@ class Dimensions:
     ball = 20
     center_player_y = canvas['height'] / 2 - player['size'] / 2
     center_ball_on_player_y = player['size'] / 2 - ball / 2
+    ball_critical_pos = {
+        'player1': [
+            0,
+            int(player['thickness'])
+        ],
+        'player2': [
+            int(canvas['width'] - player['thickness'] - ball),
+            canvas['width']
+        ]
+    }
