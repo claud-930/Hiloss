@@ -1,3 +1,5 @@
+import math
+
 from PySide6 import QtGui
 
 
@@ -42,4 +44,13 @@ class Dimensions:
             int(canvas['width'] - player['thickness'] - ball),
             canvas['width']
         ]
+    }
+    bounce_offsets = {
+        'y0': 0,
+        'y1': int(player['size'] / 3),
+        'y2': int(player['size'] / 3 * 2),
+        'y3': player['size']
+    }
+    bounce_angles = {
+        '45': math.sqrt(1/2)
     }

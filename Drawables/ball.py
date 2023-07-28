@@ -54,11 +54,13 @@ class Ball(DrawableGameObject):
         self.y += self.dy
         if self.x_critical_zone(self.x + self.dx):
             self.critical_zone['flag'] = True
+        if self.y <= 0 \
+                or self.y >= Dimensions.canvas['height'] - self.thickness:
+            self.bounce([self.direction[0], -self.direction[1]])
         self.update()
 
-    def bounce(self):
-        self.direction[0] = -self.direction[0]
-        self.direction[1] = -self.direction[1]
+    def bounce(self, direction: list):
+        self.direction = direction
         self.set_displacement()
 
     def set_displacement(self):

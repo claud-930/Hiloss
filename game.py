@@ -1,3 +1,4 @@
+import math
 import threading
 import time
 
@@ -56,11 +57,37 @@ class Game(QtWidgets.QLabel):
                     self.ball_receiver.y,
                     self.ball_receiver.y + self.ball_receiver.size
                 ]
+
                 if ball_receiver_surface[0] <= self.ball.y <= \
                         ball_receiver_surface[1]:
+                    bounce_zones = [
+                        self.ball_receiver.y + Dimensions.bounce_offsets['y0'],
+                        self.ball_receiver.y + Dimensions.bounce_offsets['y1'],
+                        self.ball_receiver.y + Dimensions.bounce_offsets['y2'],
+                        self.ball_receiver.y + Dimensions.bounce_offsets['y3']
+                    ]
+                    ball_middle = self.ball.y + self.ball.thickness / 2
+                    if bounce_zones[0] <= ball_middle <= bounce_zones[1]:
+                        if self.ball.direction[0] < 0:
+                            self.ball.bounce([math.sqrt(1/2), -math.sqrt(1/2)])
+                        else:
+                            self.ball.bounce([-math.sqrt(1/2), -math.sqrt(1/2)])
+
+                    elif bounce_zones[1] < ball_middle < bounce_zones[2]:
+                        if self.ball.direction[0] < 0:
+                            self.ball.bounce([1, 0])
+                        else:
+                            self.ball.bounce([-1, 0])
+
+                    elif bounce_zones[2] <= ball_middle <= bounce_zones[3]:
+                        if self.ball.direction[0] < 0:
+                            self.ball.bounce([math.sqrt(1/2), math.sqrt(1/2)])
+                        else:
+                            self.ball.bounce([-math.sqrt(1/2), math.sqrt(1/2)])
+
                     self.switch_ball_owner()
                     self.ball.critical_zone['flag'] = False
-                    self.ball.bounce()
+                    # self.ball.bounce()
                 else:
                     self.score()
             self.setPixmap(self.canvas)
