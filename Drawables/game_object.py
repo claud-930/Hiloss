@@ -2,6 +2,9 @@ from PySide6 import QtGui
 
 
 class DrawableGameObject:
+    """
+    Base class for all drawable game objects
+    """
     def __init__(self,
                  x: int,
                  y: int,
@@ -38,14 +41,26 @@ class DrawableGameObject:
         pass
 
     def draw(self):
+        """
+        Draws the object in the canvas
+        :return:
+        """
         self.paint(self.object_color, self.x, self.y)
         self.__last_drawn_x = self.x
         self.__last_drawn_y = self.y
 
     def erase(self):
+        """
+        Erases the object from the canvas
+        :return:
+        """
         self.paint(self.bg_color, self.__last_drawn_x, self.__last_drawn_y)
 
     def update(self):
+        """
+        Updates the object in the canvas
+        :return:
+        """
         if self.__last_drawn_x is None and self.__last_drawn_y is None:
             self.draw()
         elif self.x == self.__last_drawn_x and self.y == self.__last_drawn_y:

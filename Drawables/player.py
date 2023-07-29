@@ -5,7 +5,6 @@ from PySide6 import QtGui, QtCore
 
 from Drawables.game_object import DrawableGameObject
 from Drawables.ball import Ball
-
 from Constants import Dimensions, Colors
 
 
@@ -16,8 +15,8 @@ class Player(DrawableGameObject):
                  tick_rate=0.016):
         """
         Creates a player object.
-        :param x: Initial __x coordinate
-        :param y: Initial __y coordinate
+        :param x: Initial x coordinate
+        :param y: Initial y coordinate
         :param size: Size of the player bar
         :param thickness: Thickness of the player bar
         :param canvas: Canvas to draw the player bar on
@@ -30,7 +29,7 @@ class Player(DrawableGameObject):
         self.size = size
         self.speed = 10
         self.tick_rate = tick_rate
-        # Key listeners
+        # Keyboard listeners
         self.key_up = listeners[0]
         self.key_down = listeners[1]
         self.key_special = listeners[2]
@@ -47,7 +46,12 @@ class Player(DrawableGameObject):
         self.score = 0
 
     def runner(self):
+        """
+        Runs the player movement
+        :return:
+        """
         while self.runner_signal:
+            # Check for key presses
             if self.keys[self.key_up]:
                 self.move_up()
             elif self.keys[self.key_down]:
@@ -55,17 +59,29 @@ class Player(DrawableGameObject):
             elif self.keys[self.key_special]:
                 if self.ball is not None:
                     self.launch_ball()
+            # Update player bar and draw the ball if it's sticky to the player
             self.update()
             if self.sticky:
                 self.ball.update()
             time.sleep(self.tick_rate)
 
     def paint(self, color: QtGui.QColor, x, y):
+        """
+        Paints the player bar in the canvas
+        :param color: Color of the player bar
+        :param x: Top left x coordinate
+        :param y: Top left y coordinate
+        :return:
+        """
         painter = QtGui.QPainter(self.canvas)
         rect = QtCore.QRect(x, y, self.thickness, self.size)
         painter.fillRect(rect, color)
 
     def move_up(self):
+        """
+        Moves the player bar up
+        :return:
+        """
         if self.y <= 0:
             self.y = 0
             if self.sticky:
@@ -76,6 +92,10 @@ class Player(DrawableGameObject):
                 self.ball.y -= self.speed
 
     def move_down(self):
+        """
+        Moves the player bar down
+        :return:
+        """
         max_y = self.canvas.height() - self.size
         if self.y >= max_y:
             self.y = max_y
@@ -87,22 +107,40 @@ class Player(DrawableGameObject):
                 self.ball.y += self.speed
 
     def keyboard_event(self, event: QtGui.QKeyEvent):
+        """
+        Handles keyboard events
+        :param event: Keyboard event
+        :return:
+        """
         if event.isAutoRepeat():
             return
         if event.key() in self.keys:
             self.keys[event.key()] = not self.keys[event.key()]
 
     def ball_sticky(self, ball: Ball):
+        """
+        Sets a passed ball as sticky to the player
+        :param ball:
+        :return:
+        """
         self.ball = ball
         self.sticky = True
 
     def launch_ball(self):
+        """
+        Launches the ball
+        :return:
+        """
         self.ball.runner_signal = True
         self.ball.thread.start()
         self.ball = None
         self.sticky = False
 
     def reset(self):
+        """
+        Resets the player bar and its attributes
+        :return:
+        """
         # End thread and start a new one
         self.thread.join()
         self.thread = threading.Thread(target=self.runner)
@@ -115,6 +153,10 @@ class Player(DrawableGameObject):
         self.draw()
 
     def spawn_ball(self):
+        """
+        Spawns a ball on the center of the player bar
+        :return:
+        """
         y_ball = Dimensions.center_player_y + \
                  Dimensions.center_ball_on_player_y
 
@@ -132,6 +174,7 @@ class Player(DrawableGameObject):
             Dimensions.ball,
             Colors.neutral, self.canvas, Colors.canvas
         )
+        # Set critical zone
         ball_receiver = 'player2' if self.x == 0 else 'player1'
         critical_pos = Dimensions.ball_critical_pos[ball_receiver]
         self.ball.critical_zone['x1'] = critical_pos[0]

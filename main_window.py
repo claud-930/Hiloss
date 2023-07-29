@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QMainWindow, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import QWidget, QMainWindow, QVBoxLayout
 from PySide6.QtGui import QKeyEvent
 from game import Game
 
@@ -27,7 +27,17 @@ class MainWindow(QMainWindow):
         self.game.thread.start()
 
     def keyPressEvent(self, event: QKeyEvent):
+        """
+        Pass key press events to the game logic
+        :param event: Key press event
+        :return:
+        """
         self.game.keyboard_event(event)
 
     def keyReleaseEvent(self, event: QKeyEvent):
+        """
+        Pass key release events to the game logic
+        :param event: Key release event
+        :return:
+        """
         self.game.keyboard_event(event)
